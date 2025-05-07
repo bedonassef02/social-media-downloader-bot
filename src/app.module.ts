@@ -1,15 +1,29 @@
 import { Module } from '@nestjs/common';
-import { TelegramModule } from './telegram/telegram.module';
-import { TiktokModule } from './platforms/tiktok/tiktok.module';
 import { ConfigModule } from '@nestjs/config';
+import { TelegramService } from './telegram/telegram.service';
+import { HelperService } from './common/helper.service';
+import { PlatformFactory } from './platforms/platform.factory';
+import { TikTokService } from './platforms/tiktok/tiktok.service';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    TelegramModule,
-    TiktokModule,
+  ],
+  providers: [
+    HelperService,
+    PlatformFactory,
+    TikTokService,
+    TelegramService,
+    {
+      provide: 'PLATFORM_INIT',
+      useFactory: (
+        platformFactory: PlatformFactory,
+        tiktokService: TikTokService,
+      ) => platformFactory.registerPlatform(tiktokService),
+      inject: [PlatformFactory, TikTokService],
+    },
   ],
 })
 export class AppModule {}

@@ -7,7 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Telegraf, Context } from 'telegraf';
 import { message } from 'telegraf/filters';
-import { TikTokService } from '../platforms/tiktok/tiktok.service';
+import { PlatformFactory } from '../platforms/platform.factory';
 import { Video } from '../platforms/video.interface';
 
 @Injectable()
@@ -17,7 +17,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     private configService: ConfigService,
-    private tikTokService: TikTokService,
+    private platformFactory: PlatformFactory,
   ) {
     this.bot = new Telegraf(
       this.configService.get<string>('TELEGRAM_BOT_TOKEN'),
@@ -28,17 +28,19 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
   private setupHandlers(): void {
     this.bot.start((ctx) => {
       ctx.reply(
-        'Welcome to TikTok Downloader Bot! 🎬\n\n' +
-          'Just send me a TikTok video link and I will download it for you without watermark',
+        'Welcome to Video Downloader Bot! 🎬\n\n' +
+          'Just send me a video link from a supported platform and I will download it for you without watermark',
       );
     });
 
     this.bot.help((ctx) => {
+      const supportedPlatforms = this.platformFactory.getSupportedPlatforms();
       ctx.reply(
         'How to use this bot:\n\n' +
-          '1. Simply send a TikTok video link\n' +
+          '1. Simply send a video link from any supported platform\n' +
           '2. Wait for the bot to process and download the video\n' +
-          '3. Receive your video without watermarks!',
+          '3. Receive your video without watermarks!\n\n' +
+          `Supported platforms: ${supportedPlatforms.join(', ')}`,
       );
     });
 
@@ -54,24 +56,27 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     try {
       if ('text' in ctx.message) {
         const url = ctx.message.text;
+        const platformService = this.platformFactory.getPlatformService(url);
 
-        if (!this.tikTokService.isValidUrl(url)) {
-          await ctx.reply('❌ Please send a valid TikTok video URL.');
+        if (!platformService) {
+          await ctx.reply(
+            '❌ Please send a valid video URL from a supported platform.',
+          );
           return;
         }
 
         const processingMsg = await ctx.reply(
-          '⏳ Processing your TikTok link...',
+          `⏳ Processing your ${platformService.name} link...`,
         );
 
-        const videoInfo = await this.tikTokService.getVideoInfo(url);
+        const videoInfo = await platformService.getVideoInfo(url);
 
         if (!videoInfo || !videoInfo.downloadUrl) {
           await ctx.telegram.editMessageText(
             processingMsg.chat.id,
             processingMsg.message_id,
             null,
-            '❌ Failed to download the TikTok video. Please try again later.',
+            `❌ Failed to download the ${platformService.name} video. Please try again later.`,
           );
           return;
         }
@@ -86,10 +91,10 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
         await ctx.replyWithVideo(
           {
             url: videoInfo.downloadUrl,
-            filename: 'tiktok_video.mp4',
+            filename: `${platformService.name.toLowerCase()}_video.mp4`,
           },
           {
-            caption: this.createCaption(videoInfo),
+            caption: this.createCaption(videoInfo, platformService.name),
           },
         );
 
@@ -106,8 +111,8 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private createCaption(videoInfo: Video): string {
-    let caption = `🎬 TikTok Video\n\n`;
+  private createCaption(videoInfo: Video, platformName: string): string {
+    let caption = `🎬 ${platformName} Video\n\n`;
 
     if (videoInfo.author) caption += `👤 Author: ${videoInfo.author}\n`;
     if (videoInfo.likes) caption += `❤️ Likes: ${videoInfo.likes}\n`;
@@ -122,6 +127,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit(): Promise<void> {
     await this.bot.launch();
+    this.logger.log('Telegram bot has been started');
   }
 
   async onModuleDestroy(): Promise<void> {
