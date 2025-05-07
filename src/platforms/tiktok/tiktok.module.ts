@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TikTokService } from './tiktok.service';
-import { HelperService } from './helper.service';
 
 @Module({
-  providers: [TikTokService, HelperService],
-  exports: [TikTokService, HelperService],
+  providers: [TikTokService],
+  exports: [TikTokService],
 })
 export class TiktokModule {}
