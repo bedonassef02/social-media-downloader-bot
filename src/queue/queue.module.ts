@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { VideoConsumer } from './video.consumer';
 import { PlatformModule } from '../platform/platform.module';
 import { TelegramModule } from '../telegram/telegram.module';
+import { QUEUE_NAMES } from './queue.constants';
 
 @Module({
   imports: [
@@ -22,6 +23,5 @@ import { TelegramModule } from '../telegram/telegram.module';
     }),
   ],
   providers: [VideoConsumer],
-  exports: [VideoConsumer],
 })
 export class QueueModule {}

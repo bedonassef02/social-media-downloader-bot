@@ -4,35 +4,33 @@ import { QUEUE_NAMES } from './queue.constants';
 import { Logger } from '@nestjs/common';
 import { PlatformFactory } from '../platform/platform.factory';
 import { Video } from '../platform/video.interface';
-import { Telegraf } from 'telegraf';
 import { TelegramCore } from '../telegram/telegram.core';
 
 @Processor(QUEUE_NAMES.VIDEO_PROCESSING)
 export class VideoConsumer extends WorkerHost {
   private readonly logger = new Logger(VideoConsumer.name);
-  private bot: Telegraf;
 
   constructor(
     private readonly platformFactory: PlatformFactory,
     private readonly telegramCore: TelegramCore,
   ) {
     super();
-    this.bot = this.telegramCore.bot;
   }
 
   async process(job: Job<any>): Promise<any> {
     const { chatId, text } = job.data;
     this.logger.log(`Starting processing job ${job.id} for chat ${chatId}`);
+    const bot = this.telegramCore.bot.telegram;
 
     try {
       if (!text || !this.isValidUrl(text)) {
-        await this.sendMessage(chatId, '❌ Please send a valid URL.');
+        await bot.sendMessage(chatId, '❌ Please send a valid URL.');
         return;
       }
 
       const platformService = this.platformFactory.getPlatformService(text);
       if (!platformService) {
-        await this.sendMessage(
+        await bot.sendMessage(
           chatId,
           '❌ Platform not supported. Use /help to see supported platforms.',
         );
@@ -40,7 +38,7 @@ export class VideoConsumer extends WorkerHost {
       }
 
       // Send initial processing message
-      const processingMsg = await this.sendMessage(
+      const processingMsg = await bot.sendMessage(
         chatId,
         `⏳ Processing your ${platformService.name} link...`,
       );
@@ -54,27 +52,30 @@ export class VideoConsumer extends WorkerHost {
           `Error getting video info: ${error.message}`,
           error.stack,
         );
-        await this.editMessage(
+        await bot.editMessageText(
           chatId,
           processingMsg.message_id,
+          undefined,
           `❌ Failed to process ${platformService.name} video. Please try again later.`,
         );
         return;
       }
 
       if (!videoInfo?.downloadUrl) {
-        await this.editMessage(
+        await bot.editMessageText(
           chatId,
           processingMsg.message_id,
+          undefined,
           `❌ Could not download video from ${platformService.name}.`,
         );
         return;
       }
 
       // Update with success message
-      await this.editMessage(
+      await bot.editMessageText(
         chatId,
         processingMsg.message_id,
+        undefined,
         '✅ Successfully processed! Sending video...',
       );
 
@@ -82,7 +83,7 @@ export class VideoConsumer extends WorkerHost {
       await this.sendVideo(chatId, videoInfo, platformService.name);
 
       // Clean up processing message
-      await this.deleteMessage(chatId, processingMsg.message_id);
+      await bot.deleteMessage(chatId, processingMsg.message_id);
 
       this.logger.log(
         `Successfully completed job ${job.id} for chat ${chatId}`,
@@ -92,7 +93,7 @@ export class VideoConsumer extends WorkerHost {
         `Failed processing job ${job.id}: ${error.message}`,
         error.stack,
       );
-      await this.sendMessage(
+      await bot.sendMessage(
         chatId,
         '❌ An unexpected error occurred. Please try again later.',
       );
@@ -100,30 +101,14 @@ export class VideoConsumer extends WorkerHost {
     }
   }
 
-  private async sendMessage(chatId: number, text: string) {
-    return this.bot.telegram.sendMessage(chatId, text);
-  }
-
-  private async editMessage(chatId: number, messageId: number, text: string) {
-    return this.bot.telegram.editMessageText(
-      chatId,
-      messageId,
-      undefined,
-      text,
-    );
-  }
-
-  private async deleteMessage(chatId: number, messageId: number) {
-    return this.bot.telegram.deleteMessage(chatId, messageId);
-  }
-
   private async sendVideo(
     chatId: number,
     videoInfo: Video,
     platformName: string,
   ) {
+    const bot = this.telegramCore.bot.telegram;
     try {
-      await this.bot.telegram.sendVideo(
+      await bot.sendVideo(
         chatId,
         { url: videoInfo.downloadUrl },
         {
@@ -135,7 +120,7 @@ export class VideoConsumer extends WorkerHost {
     } catch (error) {
       this.logger.error(`Error sending video to ${chatId}: ${error.message}`);
       // Fallback to sending as document if video send fails
-      await this.bot.telegram.sendDocument(
+      await bot.sendDocument(
         chatId,
         { url: videoInfo.downloadUrl },
         {

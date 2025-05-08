@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Telegraf, Context } from 'telegraf';
+import { Context } from 'telegraf';
 import { message } from 'telegraf/filters';
 import { PlatformFactory } from '../platform/platform.factory';
 import { InjectQueue } from '@nestjs/bullmq';
@@ -9,7 +9,6 @@ import { TelegramCore } from './telegram.core';
 
 @Injectable()
 export class TelegramService {
-  private bot: Telegraf;
   private readonly logger = new Logger(TelegramService.name);
 
   constructor(
@@ -17,19 +16,20 @@ export class TelegramService {
     private telegramCore: TelegramCore,
     @InjectQueue(QUEUE_NAMES.VIDEO_PROCESSING) private videoQueue: Queue,
   ) {
-    this.bot = this.telegramCore.bot;
     this.setupHandlers();
   }
 
   private setupHandlers(): void {
-    this.bot.start((ctx) => {
+    const bot = this.telegramCore.bot;
+
+    bot.start((ctx) => {
       ctx.reply(
         'Welcome to Video Downloader Bot! 🎬\n\n' +
           'Just send me a video link from a supported platform and I will download it for you without watermark',
       );
     });
 
-    this.bot.help((ctx) => {
+    bot.help((ctx) => {
       const supportedPlatforms = this.platformFactory.getSupportedPlatforms();
       ctx.reply(
         'How to use this bot:\n\n' +
@@ -40,9 +40,9 @@ export class TelegramService {
       );
     });
 
-    this.bot.on(message('text'), this.handleMessage.bind(this));
+    bot.on(message('text'), this.handleMessage.bind(this));
 
-    this.bot.catch((err, ctx) => {
+    bot.catch((err, ctx) => {
       this.logger.error(`Error for ${ctx.updateType}:`, err);
       ctx.reply('❌ An error occurred. Please try again later.');
     });
