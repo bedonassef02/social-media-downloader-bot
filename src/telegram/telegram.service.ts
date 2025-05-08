@@ -1,30 +1,23 @@
-import {
-  Injectable,
-  OnModuleInit,
-  OnModuleDestroy,
-  Logger,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Injectable, Logger } from '@nestjs/common';
 import { Telegraf, Context } from 'telegraf';
 import { message } from 'telegraf/filters';
 import { PlatformFactory } from '../platform/platform.factory';
 import { InjectQueue } from '@nestjs/bullmq';
 import { QUEUE_NAMES } from '../queue/queue.constants';
 import { Queue } from 'bullmq';
+import { TelegramCore } from './telegram.core';
 
 @Injectable()
-export class TelegramService implements OnModuleInit, OnModuleDestroy {
+export class TelegramService {
   private bot: Telegraf;
   private readonly logger = new Logger(TelegramService.name);
 
   constructor(
-    private configService: ConfigService,
     private platformFactory: PlatformFactory,
+    private telegramCore: TelegramCore,
     @InjectQueue(QUEUE_NAMES.VIDEO_PROCESSING) private videoQueue: Queue,
   ) {
-    this.bot = new Telegraf(
-      this.configService.get<string>('TELEGRAM_BOT_TOKEN'),
-    );
+    this.bot = this.telegramCore.bot;
     this.setupHandlers();
   }
 
@@ -71,14 +64,5 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       this.logger.error('Error processing video:', error);
       await ctx.reply('❌ An error occurred. Please try again later.');
     }
-  }
-
-  async onModuleInit(): Promise<void> {
-    await this.bot.launch();
-    this.logger.log('Telegram bot has been started');
-  }
-
-  async onModuleDestroy(): Promise<void> {
-    this.bot.stop('SIGTERM');
   }
 }

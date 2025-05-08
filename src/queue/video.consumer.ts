@@ -4,8 +4,8 @@ import { QUEUE_NAMES } from './queue.constants';
 import { Logger } from '@nestjs/common';
 import { PlatformFactory } from '../platform/platform.factory';
 import { Video } from '../platform/video.interface';
-import { ConfigService } from '@nestjs/config';
 import { Telegraf } from 'telegraf';
+import { TelegramCore } from '../telegram/telegram.core';
 
 @Processor(QUEUE_NAMES.VIDEO_PROCESSING)
 export class VideoConsumer extends WorkerHost {
@@ -14,16 +14,10 @@ export class VideoConsumer extends WorkerHost {
 
   constructor(
     private readonly platformFactory: PlatformFactory,
-    private readonly configService: ConfigService,
+    private readonly telegramCore: TelegramCore,
   ) {
     super();
-    this.initializeBot();
-  }
-
-  private initializeBot() {
-    this.bot = new Telegraf(
-      this.configService.get<string>('TELEGRAM_BOT_TOKEN')
-    );
+    this.bot = this.telegramCore.bot;
   }
 
   async process(job: Job<any>): Promise<any> {
