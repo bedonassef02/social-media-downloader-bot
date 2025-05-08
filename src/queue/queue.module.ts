@@ -1,10 +1,13 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { QUEUE_NAMES } from './queue.constants';
+import { VideoConsumer } from './video.consumer';
+import { PlatformModule } from '../platform/platform.module';
 
 @Module({
   imports: [
+    PlatformModule,
+    ConfigModule,
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -15,9 +18,8 @@ import { QUEUE_NAMES } from './queue.constants';
         },
       }),
     }),
-    BullModule.registerQueue({
-      name: QUEUE_NAMES.VIDEO_PROCESSING,
-    }),
   ],
+  providers: [VideoConsumer],
+  exports: [VideoConsumer],
 })
 export class QueueModule {}

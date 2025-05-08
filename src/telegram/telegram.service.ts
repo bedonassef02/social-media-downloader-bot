@@ -8,7 +8,9 @@ import { ConfigService } from '@nestjs/config';
 import { Telegraf, Context } from 'telegraf';
 import { message } from 'telegraf/filters';
 import { PlatformFactory } from '../platform/platform.factory';
-import { Video } from '../platform/video.interface';
+import { InjectQueue } from '@nestjs/bullmq';
+import { QUEUE_NAMES } from '../queue/queue.constants';
+import { Queue } from 'bullmq';
 
 @Injectable()
 export class TelegramService implements OnModuleInit, OnModuleDestroy {
@@ -18,6 +20,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private configService: ConfigService,
     private platformFactory: PlatformFactory,
+    @InjectQueue(QUEUE_NAMES.VIDEO_PROCESSING) private videoQueue: Queue,
   ) {
     this.bot = new Telegraf(
       this.configService.get<string>('TELEGRAM_BOT_TOKEN'),
@@ -54,75 +57,20 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
 
   async handleMessage(ctx: Context): Promise<void> {
     try {
-      if ('text' in ctx.message) {
-        const url = ctx.message.text;
-        const platformService = this.platformFactory.getPlatformService(url);
+      if (!('text' in ctx.message)) return;
 
-        if (!platformService) {
-          await ctx.reply(
-            '❌ Please send a valid video URL from a supported platform.',
-          );
-          return;
-        }
+      const job = await this.videoQueue.add('transcode', {
+        chatId: ctx.chat.id,
+        messageId: ctx.message.message_id,
+        text: ctx.message.text,
+        from: ctx.from,
+      });
 
-        const processingMsg = await ctx.reply(
-          `⏳ Processing your ${platformService.name} link...`,
-        );
-
-        const videoInfo = await platformService.getVideoInfo(url);
-
-        if (!videoInfo || !videoInfo.downloadUrl) {
-          await ctx.telegram.editMessageText(
-            processingMsg.chat.id,
-            processingMsg.message_id,
-            null,
-            `❌ Failed to download the ${platformService.name} video. Please try again later.`,
-          );
-          return;
-        }
-
-        await ctx.telegram.editMessageText(
-          processingMsg.chat.id,
-          processingMsg.message_id,
-          null,
-          '✅ Successfully downloaded! Sending video now...',
-        );
-
-        await ctx.replyWithVideo(
-          {
-            url: videoInfo.downloadUrl,
-            filename: `${platformService.name.toLowerCase()}_video.mp4`,
-          },
-          {
-            caption: this.createCaption(videoInfo, platformService.name),
-          },
-        );
-
-        await ctx.telegram.deleteMessage(
-          processingMsg.chat.id,
-          processingMsg.message_id,
-        );
-      }
+      this.logger.log(`Video processing job added with ID: ${job.id}`);
     } catch (error) {
       this.logger.error('Error processing video:', error);
-      await ctx.reply(
-        '❌ An error occurred while processing the video. Please try again later.',
-      );
+      await ctx.reply('❌ An error occurred. Please try again later.');
     }
-  }
-
-  private createCaption(videoInfo: Video, platformName: string): string {
-    let caption = `🎬 ${platformName} Video\n\n`;
-
-    if (videoInfo.author) caption += `👤 Author: ${videoInfo.author}\n`;
-    if (videoInfo.likes) caption += `❤️ Likes: ${videoInfo.likes}\n`;
-    if (videoInfo.comments) caption += `💬 Comments: ${videoInfo.comments}\n`;
-    if (videoInfo.shares) caption += `🔄 Shares: ${videoInfo.shares}\n`;
-    if (videoInfo.views) caption += `👁️ Views: ${videoInfo.views}\n`;
-    if (videoInfo.description)
-      caption += `📝 Description: ${videoInfo.description.substring(0, 100)}${videoInfo.description.length > 100 ? '...' : ''}\n`;
-
-    return caption;
   }
 
   async onModuleInit(): Promise<void> {
