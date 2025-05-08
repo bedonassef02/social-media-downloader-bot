@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { TelegramService } from './telegram.service';
-import { TiktokModule } from '../platforms/tiktok/tiktok.module';
+import { PlatformModule } from '../platform/platform.module';
 
 @Module({
-  imports: [TiktokModule],
+  imports: [ConfigModule, PlatformModule],
   providers: [TelegramService],
+  exports: [TelegramService],
 })
 export class TelegramModule {}

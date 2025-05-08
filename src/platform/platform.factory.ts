@@ -1,10 +1,17 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PlatformService } from './platform.interface';
+import { TikTokService } from './tiktok/tiktok.service';
 
 @Injectable()
-export class PlatformFactory {
+export class PlatformFactory implements OnModuleInit {
   private readonly logger = new Logger(PlatformFactory.name);
   private platformServices: PlatformService[] = [];
+
+  constructor(private tiktokService: TikTokService) {}
+
+  onModuleInit() {
+    this.registerPlatform(this.tiktokService);
+  }
 
   registerPlatform(platform: PlatformService): PlatformFactory {
     this.platformServices.push(platform);

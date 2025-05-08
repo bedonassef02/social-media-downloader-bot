@@ -7,8 +7,8 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Telegraf, Context } from 'telegraf';
 import { message } from 'telegraf/filters';
-import { PlatformFactory } from '../platforms/platform.factory';
-import { Video } from '../platforms/video.interface';
+import { PlatformFactory } from '../platform/platform.factory';
+import { Video } from '../platform/video.interface';
 
 @Injectable()
 export class TelegramService implements OnModuleInit, OnModuleDestroy {
