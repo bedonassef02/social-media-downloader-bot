@@ -11,8 +11,19 @@ services:
     networks:
       - app-network
 
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - app-network
+
 volumes:
   redis_data:
+  mongodb_data:
 
 networks:
   app-network:
