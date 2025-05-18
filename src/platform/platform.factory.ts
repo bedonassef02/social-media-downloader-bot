@@ -27,6 +27,7 @@ export class PlatformFactory implements OnModuleInit {
     for (const platformService of this.platformServices)
       if (platformService.isValidUrl(url)) return platformService;
 
+    this.logger.warn(`No supported platform found for URL: ${url}`);
     return null;
   }
 }

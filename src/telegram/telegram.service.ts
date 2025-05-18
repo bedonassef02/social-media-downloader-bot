@@ -52,14 +52,12 @@ export class TelegramService {
     try {
       if (!('text' in ctx.message)) return;
 
-      const job = await this.videoQueue.add('transcode', {
+      await this.videoQueue.add('transcode', {
         chatId: ctx.chat.id,
         messageId: ctx.message.message_id,
         text: ctx.message.text,
         from: ctx.from,
       });
-
-      this.logger.log(`Video processing job added with ID: ${job.id}`);
     } catch (error) {
       this.logger.error('Error processing video:', error);
       await ctx.reply('❌ An error occurred. Please try again later.');

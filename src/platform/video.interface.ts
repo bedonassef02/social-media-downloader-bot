@@ -7,4 +7,14 @@ export interface Video {
   views?: number | string;
   description?: string;
   duration?: number;
+  isMultiItem?: boolean;
+  items?: Item[];
+}
+
+interface Item {
+  url: string;
+  type: 'video' | 'image';
+  width?: number;
+  height?: number;
+  duration?: number;
 }
