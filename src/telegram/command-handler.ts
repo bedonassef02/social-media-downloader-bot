@@ -16,11 +16,12 @@ export class CommandHandler {
 
   start(ctx: Context): void {
     ctx.reply(
-      'Welcome to Video Downloader Bot! 🎬\n\n' +
-        'Just send me a video link from a supported platform and I will download it for you without watermark.\n\n' +
-        '⚠️ *Free users* can make 3 requests per hour.\n' +
-        '✨ *Premium users* get unlimited requests with higher priority.\n\n' +
-        'Use /premium to see premium options.',
+      '🎬 *Welcome to Video Downloader Bot!*\n\n' +
+        '🔗 Send any video link to remove watermarks!\n\n' +
+        '⚡ *Free*: 3 downloads/hour\n' +
+        '💎 *Premium*: Unlimited + Priority\n\n' +
+        '👉 /premium - Upgrade options\n' +
+        '📩 Need help? Contact @bedonassef02',
       { parse_mode: 'Markdown' },
     );
   }
@@ -28,46 +29,48 @@ export class CommandHandler {
   help(ctx: Context): void {
     const supportedPlatforms = this.platformFactory.getSupportedPlatforms();
     ctx.reply(
-      'How to use this bot:\n\n' +
-        '1. Simply send a video link from any supported platform\n' +
-        '2. Wait for the bot to process and download the video\n' +
-        '3. Receive your video without watermarks!\n\n' +
-        `Supported platforms: ${supportedPlatforms.join(', ')}\n\n` +
-        '📋 *Commands*\n' +
-        '/start - Start the bot\n' +
-        '/help - Show this help message\n' +
-        '/premium - Show premium subscription options\n' +
-        '/subscription - Check your subscription status\n' +
-        '/status - Check your current account status\n\n' +
-        '⚠️ Free users: 3 requests per hour\n' +
-        '✨ Premium users: Unlimited requests + Priority processing',
+      '📚 *How to use*:\n\n' +
+        '1️⃣ Send video link\n' +
+        '2️⃣ Get watermark-free video!\n\n' +
+        `📺 Supported: ${supportedPlatforms.join(', ')}\n\n` +
+        '🔹 /premium - Upgrade account\n' +
+        '🔹 /status - Your usage\n\n' +
+        '💬 Contact @bedonassef02 for support',
       { parse_mode: 'Markdown' },
     );
   }
 
   premium(ctx: Context): void {
+    const yearlyDiscount = Math.round(
+      (1 - SUBSCRIPTION_PRICES.YEARLY / (SUBSCRIPTION_PRICES.MONTHLY * 12)) *
+        100,
+    );
     ctx.reply(
-      '✨ *Premium Subscription* ✨\n\n' +
-        'Upgrade to premium and get:\n' +
-        '• Unlimited video downloads\n' +
-        '• Priority processing\n' +
-        '• No hourly limits\n\n' +
-        '*Choose your subscription plan:*\n' +
-        `• Monthly: $${SUBSCRIPTION_PRICES.MONTHLY}/month - /subscribe_monthly\n` +
-        `• Yearly: $${SUBSCRIPTION_PRICES.YEARLY}/year - /subscribe_yearly (Save ${Math.round((1 - SUBSCRIPTION_PRICES.YEARLY / (SUBSCRIPTION_PRICES.MONTHLY * 12)) * 100)}%!)\n\n` +
-        'Use /subscription to check your current subscription status.',
+      '💎 *Premium Benefits*:\n\n' +
+        '✅ Unlimited downloads\n' +
+        '🚀 Priority processing\n' +
+        '⏱️ No waiting limits\n\n' +
+        '💰 *Plans*:\n' +
+        `💵 Monthly: $${SUBSCRIPTION_PRICES.MONTHLY}\n` +
+        `💎 Yearly: $${SUBSCRIPTION_PRICES.YEARLY} (Save ${yearlyDiscount}%!)\n\n` +
+        '📩 *How to subscribe*:\n' +
+        '1. Contact @bedonassef02\n' +
+        '2. Choose your plan\n' +
+        '3. Get instant activation!',
       { parse_mode: 'Markdown' },
     );
   }
 
   async subscribe(ctx: Context): Promise<void> {
-    const paymentLink = '';
     ctx.reply(
-      '💳 *Monthly Subscription* 💳\n\n' +
-        `Price: $${SUBSCRIPTION_PRICES.MONTHLY}/month\n\n` +
-        'To complete your subscription, please follow the payment link below:\n\n' +
-        `[Complete Payment](${paymentLink})\n\n` +
-        'Once payment is complete, your premium features will be activated automatically.',
+      '💎 *Get Premium in 3 Steps*:\n\n' +
+        '1️⃣ Contact @bedonassef02\n' +
+        '2️⃣ Choose your plan:\n' +
+        `   • Monthly ($${SUBSCRIPTION_PRICES.MONTHLY})\n` +
+        `   • Yearly ($${SUBSCRIPTION_PRICES.YEARLY}) - BEST VALUE!\n` +
+        '3️⃣ Complete payment\n\n' +
+        '✨ Instant activation!\n' +
+        '❓ Questions? Just ask @bedonassef02',
       { parse_mode: 'Markdown' },
     );
   }
@@ -79,9 +82,9 @@ export class CommandHandler {
 
     if (!details.isActive) {
       ctx.reply(
-        '📊 *Subscription Status* 📊\n\n' +
-          "You currently don't have an active subscription.\n\n" +
-          'Use /premium to see available subscription plans.',
+        '🔍 *No Active Subscription*\n\n' +
+          '💎 Want premium benefits?\n' +
+          'Contact @bedonassef02 or use /premium',
         { parse_mode: 'Markdown' },
       );
       return;
@@ -95,13 +98,12 @@ export class CommandHandler {
         : SUBSCRIPTION_PRICES.YEARLY;
 
     ctx.reply(
-      '📊 *Subscription Status* 📊\n\n' +
-        `*Plan:* ${planName}\n` +
-        `*Price:* $${price}/${details.plan.toLowerCase()}\n` +
-        `*Status:* Active\n` +
-        `*Expires:* ${details.endDate?.toDateString()}\n` +
-        `*Days Remaining:* ${details.daysRemaining}\n\n` +
-        'Use /cancel_subscription to cancel your subscription.',
+      '📊 *Your Premium Plan*\n\n' +
+        `📅 ${planName} ($${price})\n` +
+        `✅ Active\n` +
+        `⏳ Expires: ${details.endDate?.toDateString()}\n` +
+        `📆 ${details.daysRemaining} days remaining\n\n` +
+        '🔄 Need help? Contact @bedonassef02',
       { parse_mode: 'Markdown' },
     );
   }
@@ -112,13 +114,13 @@ export class CommandHandler {
       ctx.from.username || `user_${ctx.from.id}`,
     );
 
-    const accountType = user.type === UserType.PREMIUM ? 'Premium ✨' : 'Free';
+    const accountType =
+      user.type === UserType.PREMIUM ? '💎 Premium' : '⚡ Free';
     const requestsLeft =
       user.type === UserType.PREMIUM
-        ? 'Unlimited'
-        : `${Math.max(0, 3 - user.requestsThisHour)} of 3 this hour`;
+        ? '∞ Unlimited'
+        : `${Math.max(0, 3 - user.requestsThisHour)}/3 this hour`;
 
-    // Get subscription details if user is premium
     let subscriptionInfo = '';
     if (
       user.type === UserType.PREMIUM &&
@@ -128,35 +130,38 @@ export class CommandHandler {
         ctx.from.id,
       );
       subscriptionInfo =
-        `\nSubscription Plan: *${details.plan === SubscriptionPlan.MONTHLY ? 'Monthly' : 'Yearly'}*\n` +
-        `Expires: *${details.endDate?.toDateString()}*\n` +
-        `Days Remaining: *${details.daysRemaining}*\n`;
+        `\n📅 Plan: *${details.plan === SubscriptionPlan.MONTHLY ? 'Monthly' : 'Yearly'}*\n` +
+        `⏳ Expires in *${details.daysRemaining} days*\n`;
     }
 
     ctx.reply(
-      `*Account Status*\n\n` +
-        `Account Type: *${accountType}*\n` +
-        `User ID: \`${user.telegramId}\`\n` +
-        `Requests Available: *${requestsLeft}*\n` +
+      `📊 *Your Account*\n\n` +
+        `👤 ${accountType}\n` +
+        `📥 Downloads: *${requestsLeft}*\n` +
         subscriptionInfo +
-        `\n` +
         (user.type === UserType.NORMAL
-          ? `Upgrade to premium for unlimited requests and priority processing! Use /premium`
-          : `Thanks for being a premium user!`),
+          ? `\n💎 Want unlimited downloads?\nContact @bedonassef02 or use /premium`
+          : `\n✨ Thank you for being premium!\nNeed help? @bedonassef02`),
       { parse_mode: 'Markdown' },
     );
   }
 
   rateLimitReached(ctx: Context): void {
     ctx.reply(
-      '⚠️ *Rate limit reached*\n\n' +
-        'You have reached the limit of 3 requests per hour for free users.\n\n' +
-        'Please try again later or upgrade to premium for unlimited requests! Use /premium',
+      '⛔ *Download Limit Reached!*\n\n' +
+        'Free users get 3 downloads/hour\n\n' +
+        '💎 Get unlimited access:\n' +
+        '👉 Contact @bedonassef02\n' +
+        'or use /premium',
       { parse_mode: 'Markdown' },
     );
   }
 
   error(ctx: Context): void {
-    ctx.reply('❌ An error occurred. Please try again later.');
+    ctx.reply(
+      '❌ Something went wrong!\n\n' +
+        'Please try again later or contact @bedonassef02 for help',
+      { parse_mode: 'Markdown' },
+    );
   }
 }
