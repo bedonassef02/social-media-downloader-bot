@@ -1,25 +1,20 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import { User, UserType, SubscriptionPlan } from '../user/entities/user.entity';
 import { SUBSCRIPTION_DURATIONS } from './subscription.constants';
 import { CreateSubscriptionDto } from './dto/subscription.dto';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class SubscriptionService {
   private readonly logger = new Logger(SubscriptionService.name);
 
-  constructor(
-    @InjectModel(User.name) private readonly userModel: Model<User>,
-  ) {}
+  constructor(private readonly userService: UserService) {}
 
   async createSubscription(
     subscriptionDto: CreateSubscriptionDto,
   ): Promise<User> {
     const { telegramId, plan } = subscriptionDto;
-    const user = await this.userModel.findOne({ telegramId });
-
-    if (!user) throw new Error('User not found');
+    const user = await this.userService.findOrCreate(telegramId);
 
     const now = new Date();
     let subscriptionEndDate: Date;
@@ -54,10 +49,7 @@ export class SubscriptionService {
     endDate: Date | null;
     daysRemaining: number | null;
   }> {
-    const user = await this.userModel.findOne({ telegramId });
-    if (!user) {
-      throw new Error('User not found');
-    }
+    const user = await this.userService.findOrCreate(telegramId);
 
     const now = new Date();
     const isActive = this.isSubscriptionActive(user);

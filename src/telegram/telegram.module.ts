@@ -7,12 +7,14 @@ import { QUEUE_NAMES } from '../queue/queue.constants';
 import { TelegramCore } from './telegram.core';
 import { UserModule } from '../user/user.module';
 import { CommandHandler } from './command-handler';
+import { SubscriptionModule } from '../subscription/subscription.module';
 
 @Module({
   imports: [
     ConfigModule,
     PlatformModule,
     UserModule,
+    SubscriptionModule,
     BullModule.registerQueue({
       name: QUEUE_NAMES.VIDEO_PROCESSING,
     }),
