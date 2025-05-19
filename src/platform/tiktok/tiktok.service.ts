@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { HelperService } from '../../common/helper.service';
 import { Video } from '../video.interface';
 import { PlatformService } from '../platform.interface';
+import { AxiosResponse } from 'axios';
 
 @Injectable()
 export class TikTokService implements PlatformService {
@@ -27,7 +28,7 @@ export class TikTokService implements PlatformService {
       const normalizedUrl = this.normalizeUrl(url);
 
       try {
-        const video = await this.fetchFromApi(this.API_ENDPOINT, normalizedUrl);
+        const video = await this.fetch(this.API_ENDPOINT, normalizedUrl);
         if (video) return video;
       } catch (error) {
         this.logger.warn(
@@ -62,26 +63,17 @@ export class TikTokService implements PlatformService {
     }
   }
 
-  private async fetchFromApi(endpoint: string, url: string): Promise<Video> {
+  private async fetch(endpoint: string, url: string): Promise<Video> {
     const response = await this.helperService.retry(() =>
       this.helperService.get(`${endpoint}?url=${encodeURIComponent(url)}`),
     );
 
     if (!response.data) throw new Error('Empty response from API');
 
-    if (
-      response.data.images &&
-      Array.isArray(response.data.images) &&
-      response.data.images.length > 0
-    )
+    if (this.isVideo(response))
       return {
+        ...this.extractMetadata(response),
         downloadUrl: response.data.images[0].url,
-        author: response.data.author?.name,
-        likes: response.data.stats?.likeCount,
-        comments: response.data.stats?.commentCount,
-        shares: response.data.stats?.shareCount,
-        views: response.data.stats?.playCount,
-        description: response.data.title,
         duration: 0,
         isMultiItem: true,
         items: response.data.images.map((img) => ({
@@ -92,17 +84,31 @@ export class TikTokService implements PlatformService {
 
     if (response.data?.video?.noWatermark)
       return {
+        ...this.extractMetadata(response),
         downloadUrl: response.data.video.noWatermark,
-        author: response.data.author?.name,
-        likes: response.data.stats?.likeCount,
-        comments: response.data.stats?.commentCount,
-        shares: response.data.stats?.shareCount,
-        views: response.data.stats?.playCount,
-        description: response.data.title,
         duration: response.data.video?.duration,
         isMultiItem: false,
       };
 
     throw new Error('Invalid response from API');
+  }
+
+  private isVideo(response: AxiosResponse): boolean {
+    return (
+      response.data.images &&
+      Array.isArray(response.data.images) &&
+      response.data.images.length > 0
+    );
+  }
+
+  private extractMetadata(response: AxiosResponse): Partial<Video> {
+    return {
+      author: response.data.author?.name,
+      likes: response.data.stats?.likeCount,
+      comments: response.data.stats?.commentCount,
+      shares: response.data.stats?.shareCount,
+      views: response.data.stats?.playCount,
+      description: response.data.title,
+    };
   }
 }

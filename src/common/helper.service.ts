@@ -12,10 +12,9 @@ export class HelperService {
   async retry<T>(
     fn: () => Promise<T>,
     maxRetries = 3,
-    initialDelay = 300,
+    delay = 300,
   ): Promise<T> {
     let retries = 0;
-    let delay = initialDelay;
 
     while (retries < maxRetries) {
       try {
