@@ -4,12 +4,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { VideoConsumer } from './video.consumer';
 import { PlatformModule } from '../platform/platform.module';
 import { TelegramModule } from '../telegram/telegram.module';
+import { UserModule } from '../user/user.module';
 
 @Module({
   imports: [
     PlatformModule,
     ConfigModule,
     TelegramModule,
+    UserModule,
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

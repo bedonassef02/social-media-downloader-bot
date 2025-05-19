@@ -5,6 +5,7 @@ import { Logger } from '@nestjs/common';
 import { PlatformFactory } from '../platform/platform.factory';
 import { Video } from '../platform/video.interface';
 import { TelegramCore } from '../telegram/telegram.core';
+import { UserService } from '../user/user.service';
 
 @Processor(QUEUE_NAMES.VIDEO_PROCESSING)
 export class VideoConsumer extends WorkerHost {
@@ -13,16 +14,26 @@ export class VideoConsumer extends WorkerHost {
   constructor(
     private readonly platformFactory: PlatformFactory,
     private readonly telegramCore: TelegramCore,
+    private readonly userService: UserService,
   ) {
     super();
   }
 
   async process(job: Job<any>): Promise<any> {
-    const { chatId, text } = job.data;
+    const { chatId, text, from } = job.data;
     this.logger.log(`Processing job ${job.id} for chat ${chatId}`);
     const bot = this.telegramCore.bot.telegram;
 
     try {
+      // Find or create user record
+      const user = await this.userService.findOrCreate(
+        from.id,
+        from.username || `user_${from.id}`,
+      );
+
+      // Update user's request count
+      await this.userService.updateRequests(user);
+
       if (!text || !this.isValidUrl(text)) {
         await bot.sendMessage(chatId, '❌ Please send a valid URL.');
         return;

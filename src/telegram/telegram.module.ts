@@ -5,11 +5,13 @@ import { PlatformModule } from '../platform/platform.module';
 import { BullModule } from '@nestjs/bullmq';
 import { QUEUE_NAMES } from '../queue/queue.constants';
 import { TelegramCore } from './telegram.core';
+import { UserModule } from '../user/user.module';
 
 @Module({
   imports: [
     ConfigModule,
     PlatformModule,
+    UserModule,
     BullModule.registerQueue({
       name: QUEUE_NAMES.VIDEO_PROCESSING,
     }),
