@@ -6,6 +6,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { QUEUE_NAMES } from '../queue/queue.constants';
 import { TelegramCore } from './telegram.core';
 import { UserModule } from '../user/user.module';
+import { CommandHandler } from './command-handler';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { UserModule } from '../user/user.module';
       name: QUEUE_NAMES.VIDEO_PROCESSING,
     }),
   ],
-  providers: [TelegramService, TelegramCore],
+  providers: [TelegramService, TelegramCore, CommandHandler],
   exports: [TelegramCore],
 })
 export class TelegramModule {}
