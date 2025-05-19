@@ -24,15 +24,12 @@ export class TelegramService {
     const bot = this.telegramCore.bot;
 
     bot.start((ctx) => this.command.start(ctx));
-
     bot.help((ctx) => this.command.help(ctx));
-
     bot.command('premium', (ctx) => this.command.premium(ctx));
-
     bot.command('status', (ctx) => this.command.status(ctx));
-
+    bot.command('subscribe', (ctx) => this.command.subscribe(ctx));
+    bot.command('subscription', (ctx) => this.command.subscriptionStatus(ctx));
     bot.on(message('text'), this.handleMessage.bind(this));
-
     bot.catch((err, ctx) => this.command.error(ctx));
   }
 

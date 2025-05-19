@@ -6,6 +6,7 @@ import { TelegramModule } from './telegram/telegram.module';
 import { CommonModule } from './common/common.module';
 import { UserModule } from './user/user.module';
 import { DatabaseModule } from './database/database.module';
+import { SubscriptionModule } from './subscription/subscription.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { DatabaseModule } from './database/database.module';
     TelegramModule,
     UserModule,
     DatabaseModule,
+    SubscriptionModule,
   ],
 })
 export class AppModule {}

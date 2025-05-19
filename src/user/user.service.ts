@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User, UserType } from './entities/user.entity';
+import { User, UserType, SubscriptionPlan } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
@@ -23,6 +23,7 @@ export class UserService {
         telegramId,
         username,
         type: UserType.NORMAL,
+        subscriptionPlan: SubscriptionPlan.NONE,
         requestsThisHour: 0,
         lastRequestTime: new Date(),
       });
@@ -48,7 +49,7 @@ export class UserService {
   }
 
   async canMakeRequest(user: User): Promise<boolean> {
-    if (user.type === UserType.PREMIUM) return true;
+    if (this.hasActiveSubscription(user)) return true;
 
     const now = new Date();
 
@@ -60,5 +61,28 @@ export class UserService {
       return true;
 
     return user.requestsThisHour < 3;
+  }
+
+  hasActiveSubscription(user: User): boolean {
+    if (user.type !== UserType.PREMIUM) return false;
+    if (!user.subscriptionEndDate) return false;
+
+    const now = new Date();
+
+    if (now > user.subscriptionEndDate) {
+      this.handleExpiredSubscription(user);
+      return false;
+    }
+
+    return true;
+  }
+
+  private async handleExpiredSubscription(user: User): Promise<void> {
+    user.type = UserType.NORMAL;
+    user.subscriptionPlan = SubscriptionPlan.NONE;
+
+    this.logger.log(`Subscription expired for user ${user.telegramId}`);
+
+    await user.save();
   }
 }
