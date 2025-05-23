@@ -1,8 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { User, UserType, SubscriptionPlan } from '../user/entities/user.entity';
 import { SUBSCRIPTION_DURATIONS } from './subscription.constants';
 import { CreateSubscriptionDto } from './dto/subscription.dto';
 import { UserService } from '../user/user.service';
+import { User } from "../user/entities/user.entity";
+import { SubscriptionPlan } from "./types/subscription.plan";
+import { UserType } from "../user/types/user.type";
 
 @Injectable()
 export class SubscriptionService {

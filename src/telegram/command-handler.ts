@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Context } from 'telegraf';
 import { PlatformFactory } from '../platform/platform.factory';
-import { UserType, SubscriptionPlan } from '../user/entities/user.entity';
 import { UserService } from '../user/user.service';
 import { SubscriptionService } from '../subscription/subscription.service';
 import { SUBSCRIPTION_PRICES } from '../subscription/subscription.constants';
+import { UserType } from '../user/types/user.type';
+import { SubscriptionPlan } from '../subscription/types/subscription.plan';
 
 @Injectable()
 export class CommandHandler {

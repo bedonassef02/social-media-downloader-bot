@@ -6,8 +6,8 @@ import { QUEUE_NAMES, QUEUE_PRIORITY } from '../queue/queue.constants';
 import { Queue } from 'bullmq';
 import { TelegramCore } from './telegram.core';
 import { UserService } from '../user/user.service';
-import { UserType } from '../user/entities/user.entity';
 import { CommandHandler } from './command-handler';
+import { UserType } from '../user/types/user.type';
 
 @Injectable()
 export class TelegramService {
