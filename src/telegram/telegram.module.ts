@@ -17,6 +17,13 @@ import { SubscriptionModule } from '../subscription/subscription.module';
     SubscriptionModule,
     BullModule.registerQueue({
       name: QUEUE_NAMES.VIDEO_PROCESSING,
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 1000,
+        },
+      },
     }),
   ],
   providers: [TelegramService, TelegramCore, CommandHandler],

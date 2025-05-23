@@ -7,7 +7,7 @@ import { Video } from '../platform/video.interface';
 import { TelegramCore } from '../telegram/telegram.core';
 import { UserService } from '../user/user.service';
 
-@Processor(QUEUE_NAMES.VIDEO_PROCESSING)
+@Processor(QUEUE_NAMES.VIDEO_PROCESSING, { concurrency: 5 })
 export class VideoConsumer extends WorkerHost {
   private readonly logger = new Logger(VideoConsumer.name);
 
