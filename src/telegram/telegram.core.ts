@@ -3,19 +3,22 @@ import {
   OnModuleInit,
   OnModuleDestroy,
   Logger,
+  Inject,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { ConfigType } from '@nestjs/config';
 import { Telegraf } from 'telegraf';
+import telegramConfig from '../config/telegram.config';
 
 @Injectable()
 export class TelegramCore implements OnModuleInit, OnModuleDestroy {
   public bot: Telegraf;
   private readonly logger = new Logger(TelegramCore.name);
 
-  constructor(private configService: ConfigService) {
-    this.bot = new Telegraf(
-      this.configService.get<string>('TELEGRAM_BOT_TOKEN'),
-    );
+  constructor(
+    @Inject(telegramConfig.KEY)
+    private readonly tgConfig: ConfigType<typeof telegramConfig>,
+  ) {
+    this.bot = new Telegraf(this.tgConfig.botToken);
   }
 
   async onModuleInit(): Promise<void> {
