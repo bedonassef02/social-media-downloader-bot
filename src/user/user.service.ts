@@ -19,7 +19,7 @@ export class UserService {
 
     if (!user) {
       this.logger.log(`Creating new user with telegramId: ${telegramId}`);
-      user = new this.userModel({
+      user = await this.userModel.create({
         telegramId,
         username,
         type: UserType.NORMAL,
@@ -27,7 +27,6 @@ export class UserService {
         requestsThisHour: 0,
         lastRequestTime: new Date(),
       });
-      await user.save();
     }
 
     return user;
