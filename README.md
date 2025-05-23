@@ -187,21 +187,21 @@ Free users are limited to 3 requests per hour:
 ### Common Issues
 
 1. **Bot not responding**
-    - Check Telegram token validity
-    - Verify bot is running: `npm run start:dev`
+   - Check Telegram token validity
+   - Verify bot is running: `npm run start:dev`
 
 2. **Database connection errors**
-    - Ensure MongoDB is running
-    - Check MONGODB_URI in environment
+   - Ensure MongoDB is running
+   - Check MONGODB_URI in environment
 
 3. **Queue processing issues**
-    - Verify Redis connection
-    - Check Redis service status
+   - Verify Redis connection
+   - Check Redis service status
 
 4. **Video download failures**
-    - Platform API may be down
-    - Check network connectivity
-    - Review logs for specific errors
+   - Platform API may be down
+   - Check network connectivity
+   - Review logs for specific errors
 
 ## 🤝 Contributing
 
@@ -219,7 +219,7 @@ This project is licensed under the MIT License.
 
 For support and inquiries:
 - Telegram: @bedonassef02
-- Email: [Contact Information]
+- Email: bedonassef71@gmail.com
 
 ---
 
