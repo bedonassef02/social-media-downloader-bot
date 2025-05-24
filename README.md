@@ -112,7 +112,7 @@ Subscriptions are managed manually through the admin interface. To create a subs
 // Example: Create a monthly subscription
 const subscriptionDto = {
   telegramId: 123456789,
-  plan: SubscriptionPlan.MONTHLY
+  plan: SubscriptionPlanInterface.MONTHLY
 };
 
 await subscriptionService.createSubscription(subscriptionDto);

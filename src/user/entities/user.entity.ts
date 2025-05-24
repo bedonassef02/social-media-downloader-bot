@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { UserType } from '../types/user.type';
-import { SubscriptionPlan } from '../../subscription/types/subscription.plan';
+import { SubscriptionPlan } from '../../subscription/types/subscription-plan.enum';
 
 @Schema({ timestamps: true })
 export class User extends Document {

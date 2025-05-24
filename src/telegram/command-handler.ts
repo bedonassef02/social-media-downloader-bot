@@ -5,7 +5,7 @@ import { UserService } from '../user/user.service';
 import { SubscriptionService } from '../subscription/subscription.service';
 import { SUBSCRIPTION_PRICES } from '../subscription/subscription.constants';
 import { UserType } from '../user/types/user.type';
-import { SubscriptionPlan } from '../subscription/types/subscription.plan';
+import { SubscriptionPlan } from '../subscription/types/subscription-plan.enum';
 
 @Injectable()
 export class CommandHandler {
@@ -77,9 +77,7 @@ export class CommandHandler {
   }
 
   async subscriptionStatus(ctx: Context): Promise<void> {
-    const details = await this.subscriptionService.getSubscriptionDetails(
-      ctx.from.id,
-    );
+    const details = await this.subscriptionService.findOne(ctx.from.id);
 
     if (!details.isActive) {
       ctx.reply(
@@ -123,9 +121,7 @@ export class CommandHandler {
       user.type === UserType.PREMIUM &&
       this.userService.hasActiveSubscription(user)
     ) {
-      const details = await this.subscriptionService.getSubscriptionDetails(
-        ctx.from.id,
-      );
+      const details = await this.subscriptionService.findOne(ctx.from.id);
       subscriptionInfo =
         `\n📅 Plan: *${details.plan === SubscriptionPlan.MONTHLY ? 'Monthly' : 'Yearly'}*\n` +
         `⏳ Expires in *${details.daysRemaining} days*\n`;

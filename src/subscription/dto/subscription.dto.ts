@@ -1,6 +1,6 @@
-import { SubscriptionPlan } from '../types/subscription.plan';
+import { SubscriptionPlan } from '../types/subscription-plan.enum';
 
-export class CreateSubscriptionDto {
+export class SubscriptionDto {
   telegramId: number;
   plan: SubscriptionPlan;
 }

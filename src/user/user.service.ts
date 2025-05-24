@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from './entities/user.entity';
 import { UserType } from './types/user.type';
-import { SubscriptionPlan } from '../subscription/types/subscription.plan';
+import { SubscriptionPlan } from '../subscription/types/subscription-plan.enum';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { UserRequestCount } from './types/user-request-count.type';
 
@@ -101,5 +101,9 @@ export class UserService {
 
     const cacheKey = `user:${user.telegramId}`;
     await this.cacheManager.set(cacheKey, user, 300 * 1000);
+  }
+
+  async clearUserCache(telegramId: number): Promise<void> {
+    await this.cacheManager.del(`user:${telegramId}`);
   }
 }
