@@ -117,10 +117,6 @@ export class CommandHandler {
 
     const accountType =
       user.type === UserType.PREMIUM ? '💎 Premium' : '⚡ Free';
-    const requestsLeft =
-      user.type === UserType.PREMIUM
-        ? '∞ Unlimited'
-        : `${Math.max(0, 3 - user.requestsThisHour)}/3 this hour`;
 
     let subscriptionInfo = '';
     if (
@@ -138,7 +134,6 @@ export class CommandHandler {
     ctx.reply(
       `📊 *Your Account*\n\n` +
         `👤 ${accountType}\n` +
-        `📥 Downloads: *${requestsLeft}*\n` +
         subscriptionInfo +
         (user.type === UserType.NORMAL
           ? `\n💎 Want unlimited downloads?\nContact @bedonassef02 or use /premium`

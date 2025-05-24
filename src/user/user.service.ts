@@ -1,9 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from './entities/user.entity';
 import { UserType } from './types/user.type';
 import { SubscriptionPlan } from '../subscription/types/subscription.plan';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import { UserRequestCount } from './types/user-request-count.type';
 
 @Injectable()
 export class UserService {
@@ -11,57 +13,68 @@ export class UserService {
 
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   async findOrCreate(
     telegramId: number,
     username: string = null,
   ): Promise<User> {
-    let user = await this.userModel.findOne({ telegramId });
+    const cacheKey = `user:${telegramId}`;
+    let user: User = await this.cacheManager.get<User>(cacheKey);
+    if (user) return user;
+
+    user = await this.userModel.findOne({ telegramId });
 
     if (!user) {
-      this.logger.log(`Creating new user with telegramId: ${telegramId}`);
+      this.logger.log(`Creating new user: ${telegramId}`);
       user = await this.userModel.create({
         telegramId,
         username,
         type: UserType.NORMAL,
         subscriptionPlan: SubscriptionPlan.NONE,
-        requestsThisHour: 0,
-        lastRequestTime: new Date(),
       });
     }
 
+    await this.cacheManager.set(cacheKey, user, 300 * 1000);
     return user;
-  }
-
-  async updateRequests(user: User): Promise<User> {
-    const now = new Date();
-
-    // Reset counter if an hour has passed
-    if (
-      user.lastRequestTime &&
-      now.getTime() - user.lastRequestTime.getTime() > 3600000
-    )
-      user.requestsThisHour = 1;
-    else user.requestsThisHour += 1;
-
-    user.lastRequestTime = now;
-    return user.save();
   }
 
   async canMakeRequest(user: User): Promise<boolean> {
     if (this.hasActiveSubscription(user)) return true;
 
-    const now = new Date();
+    return (await this.getRequestCount(user.telegramId)) < 3;
+  }
 
-    // Reset counter if an hour has passed
-    if (
-      user.lastRequestTime &&
-      now.getTime() - user.lastRequestTime.getTime() > 3600000
-    )
-      return true;
+  async updateRequests(user: User): Promise<number> {
+    const requestKey = `requests:${user.telegramId}`;
+    const now = Date.now();
+    const hourStart = Math.floor(now / (1000 * 60 * 60)) * (1000 * 60 * 60);
 
-    return user.requestsThisHour < 3;
+    let requestData: UserRequestCount = await this.cacheManager.get(requestKey);
+
+    if (!requestData || requestData.lastReset !== hourStart)
+      requestData = {
+        count: 1,
+        lastReset: hourStart,
+      };
+    else requestData.count += 1;
+
+    await this.cacheManager.set(requestKey, requestData, 3600 * 1000);
+    return requestData.count;
+  }
+
+  async getRequestCount(telegramId: number): Promise<number> {
+    const requestKey = `requests:${telegramId}`;
+    const now = Date.now();
+    const hourStart = Math.floor(now / (1000 * 60 * 60)) * (1000 * 60 * 60);
+
+    const requestData: UserRequestCount =
+      await this.cacheManager.get(requestKey);
+
+    if (!requestData || requestData.lastReset !== hourStart) return 0;
+
+    return requestData.count;
   }
 
   hasActiveSubscription(user: User): boolean {
@@ -85,5 +98,8 @@ export class UserService {
     this.logger.log(`Subscription expired for user ${user.telegramId}`);
 
     await user.save();
+
+    const cacheKey = `user:${user.telegramId}`;
+    await this.cacheManager.set(cacheKey, user, 300 * 1000);
   }
 }

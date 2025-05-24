@@ -22,12 +22,6 @@ export class User extends Document {
 
   @Prop()
   subscriptionEndDate: Date;
-
-  @Prop({ default: 0 })
-  requestsThisHour: number;
-
-  @Prop()
-  lastRequestTime: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
