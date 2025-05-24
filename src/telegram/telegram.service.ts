@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Context } from 'telegraf';
 import { message } from 'telegraf/filters';
 import { InjectQueue } from '@nestjs/bullmq';
@@ -11,6 +11,8 @@ import { UserType } from '../user/types/user.type';
 
 @Injectable()
 export class TelegramService {
+  private logger: Logger = new Logger(TelegramService.name);
+
   constructor(
     private telegramCore: TelegramCore,
     private userService: UserService,
@@ -41,9 +43,15 @@ export class TelegramService {
       ctx.from.username || `user_${ctx.from.id}`,
     );
 
+    this.logger.log(
+      `Received message from user ${ctx.from.id}: ${ctx.message.text}`,
+    );
+
     const canMakeRequest = await this.userService.canMakeRequest(user);
 
     if (!canMakeRequest) {
+      this.logger.log(`Rate limit reached for user ${ctx.from.id}`);
+
       this.command.rateLimitReached(ctx);
       return;
     }
