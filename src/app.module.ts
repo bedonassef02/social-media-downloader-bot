@@ -7,10 +7,14 @@ import { UserModule } from './user/user.module';
 import { DatabaseModule } from './database/database.module';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { configModule } from './config/config.module';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
     configModule,
+    CacheModule.register({
+      isGlobal: true,
+    }),
     CommonModule,
     PlatformModule,
     QueueModule,
