@@ -47,11 +47,21 @@ export class TelegramService {
       `Received message from user ${ctx.from.id}: ${ctx.message.text}`,
     );
 
+    const isDuplicate = await this.userService.isDuplicateLink(
+      ctx.from.id,
+      ctx.message.text,
+    );
+
+    if (isDuplicate) {
+      this.logger.log(`Duplicate message blocked for user ${ctx.from.id}`);
+      this.command.duplicateLink(ctx);
+      return;
+    }
+
     const canMakeRequest = await this.userService.canMakeRequest(user);
 
     if (!canMakeRequest) {
       this.logger.log(`Rate limit reached for user ${ctx.from.id}`);
-
       this.command.rateLimitReached(ctx);
       return;
     }

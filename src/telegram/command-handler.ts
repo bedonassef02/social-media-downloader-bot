@@ -149,6 +149,20 @@ export class CommandHandler {
     );
   }
 
+  duplicateLink(ctx: Context): void {
+    ctx.reply(
+      '🔄 *Duplicate Message Detected!*\n\n' +
+        'You just sent this message recently.\n' +
+        'Please wait a moment before sending it again.\n\n' +
+        '⏰ *Why this happens:*\n' +
+        '• Prevents duplicate processing\n' +
+        '• Saves server resources\n' +
+        '• Improves service for everyone\n\n' +
+        '💡 *Try again in 1 minute* or send a different link!',
+      { parse_mode: 'Markdown' },
+    );
+  }
+
   error(ctx: Context): void {
     ctx.reply(
       '❌ Something went wrong!\n\n' +

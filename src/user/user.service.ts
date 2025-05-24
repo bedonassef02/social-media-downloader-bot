@@ -6,6 +6,7 @@ import { UserType } from './types/user.type';
 import { SubscriptionPlan } from '../subscription/types/subscription-plan.enum';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { UserRequestCount } from './types/user-request-count.type';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class UserService {
@@ -44,6 +45,17 @@ export class UserService {
     if (this.hasActiveSubscription(user)) return true;
 
     return (await this.getRequestCount(user.telegramId)) < 3;
+  }
+
+  async isDuplicateLink(telegramId: number, link: string): Promise<boolean> {
+    const linkHash = crypto.createHash('sha256').update(link).digest('hex');
+    const duplicateKey = `duplicate:${telegramId}:${linkHash}`;
+
+    const existingLink = await this.cacheManager.get(duplicateKey);
+    if (existingLink) return true;
+
+    await this.cacheManager.set(duplicateKey, link, 60 * 1000);
+    return false;
   }
 
   async updateRequests(user: User): Promise<number> {
