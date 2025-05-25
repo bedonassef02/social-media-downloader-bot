@@ -32,7 +32,7 @@ export class SubscriptionService {
     return user.save();
   }
 
-  async findOne(telegramId: number): Promise<SubscriptionDetails> {
+  async findOne(telegramId?: number): Promise<SubscriptionDetails> {
     const user = await this.userService.findOrCreate(telegramId);
     return {
       isActive: this.isActive(user),

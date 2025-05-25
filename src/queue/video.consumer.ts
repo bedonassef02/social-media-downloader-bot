@@ -54,7 +54,7 @@ export class VideoConsumer extends WorkerHost {
         `⏳ Processing your ${platformService.name} link...`,
       );
 
-      let videoInfo: Video;
+      let videoInfo: Video | null;
       try {
         videoInfo = await platformService.getVideoInfo(text);
       } catch (error) {
@@ -134,16 +134,18 @@ export class VideoConsumer extends WorkerHost {
   ) {
     try {
       const caption = this.createCaption(videoInfo, platformName);
-      const mediaGroup = videoInfo.items
-        .filter((item) => item.type === 'image')
-        .map((item, index) => ({
-          type: 'photo' as const,
-          media: item.url,
-          caption: index === 0 ? caption : undefined,
-          parse_mode: 'Markdown' as const,
-        }));
+      const mediaGroup =
+        videoInfo.items &&
+        videoInfo.items
+          .filter((item) => item.type === 'image')
+          .map((item, index) => ({
+            type: 'photo' as const,
+            media: item.url,
+            caption: index === 0 ? caption : undefined,
+            parse_mode: 'Markdown' as const,
+          }));
 
-      if (mediaGroup.length > 0)
+      if (mediaGroup && mediaGroup.length > 0)
         if (mediaGroup.length === 1)
           await this.bot.sendPhoto(chatId, mediaGroup[0].media, {
             caption: mediaGroup[0].caption,

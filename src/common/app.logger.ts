@@ -6,7 +6,7 @@ export class AppLogger extends ConsoleLogger {
   private readonly logFilePath: string;
   private readonly allowedContexts: string[];
 
-  constructor(context?: string) {
+  constructor(context: string = '') {
     super(context);
     this.logFilePath = path.join(process.cwd(), 'logs', 'app.log');
     this.allowedContexts = ['VideoConsumer', 'TelegramService'];
@@ -44,7 +44,7 @@ export class AppLogger extends ConsoleLogger {
   }
 
   private writeToFile(message: any, context?: string) {
-    if (!this.allowedContexts.includes(context)) return;
+    if (!context || !this.allowedContexts.includes(context)) return;
 
     const timestamp = new Date().toISOString();
     fs.appendFileSync(

@@ -77,7 +77,7 @@ export class CommandHandler {
   }
 
   async subscriptionStatus(ctx: Context): Promise<void> {
-    const details = await this.subscriptionService.findOne(ctx.from.id);
+    const details = await this.subscriptionService.findOne(ctx.from?.id);
 
     if (!details.isActive) {
       ctx.reply(
@@ -109,8 +109,8 @@ export class CommandHandler {
 
   async status(ctx: Context): Promise<void> {
     const user = await this.userService.findOrCreate(
-      ctx.from.id,
-      ctx.from.username || `user_${ctx.from.id}`,
+      ctx.from?.id,
+      ctx.from?.username || `user_${ctx.from?.id}`,
     );
 
     const accountType =
@@ -121,7 +121,7 @@ export class CommandHandler {
       user.type === UserType.PREMIUM &&
       this.userService.hasActiveSubscription(user)
     ) {
-      const details = await this.subscriptionService.findOne(ctx.from.id);
+      const details = await this.subscriptionService.findOne(ctx.from?.id);
       subscriptionInfo =
         `\n📅 Plan: *${details.plan === SubscriptionPlan.MONTHLY ? 'Monthly' : 'Yearly'}*\n` +
         `⏳ Expires in *${details.daysRemaining} days*\n`;

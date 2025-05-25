@@ -17,12 +17,9 @@ export class UserService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  async findOrCreate(
-    telegramId: number,
-    username: string = null,
-  ): Promise<User> {
+  async findOrCreate(telegramId?: number, username?: string): Promise<User> {
     const cacheKey = `user:${telegramId}`;
-    let user: User = await this.cacheManager.get<User>(cacheKey);
+    let user: User | null = await this.cacheManager.get<User>(cacheKey);
     if (user) return user;
 
     user = await this.userModel.findOne({ telegramId });
@@ -47,8 +44,11 @@ export class UserService {
     return (await this.getRequestCount(user.telegramId)) < 3;
   }
 
-  async isDuplicateLink(telegramId: number, link: string): Promise<boolean> {
-    const linkHash = crypto.createHash('sha256').update(link).digest('hex');
+  async isDuplicateLink(telegramId?: number, link?: string): Promise<boolean> {
+    const linkHash = crypto
+      .createHash('sha256')
+      .update(link ?? '')
+      .digest('hex');
     const duplicateKey = `duplicate:${telegramId}:${linkHash}`;
 
     const existingLink = await this.cacheManager.get(duplicateKey);
@@ -63,7 +63,8 @@ export class UserService {
     const now = Date.now();
     const hourStart = Math.floor(now / (1000 * 60 * 60)) * (1000 * 60 * 60);
 
-    let requestData: UserRequestCount = await this.cacheManager.get(requestKey);
+    let requestData: UserRequestCount | null =
+      await this.cacheManager.get(requestKey);
 
     if (!requestData || requestData.lastReset !== hourStart)
       requestData = {
@@ -81,7 +82,7 @@ export class UserService {
     const now = Date.now();
     const hourStart = Math.floor(now / (1000 * 60 * 60)) * (1000 * 60 * 60);
 
-    const requestData: UserRequestCount =
+    const requestData: UserRequestCount | null =
       await this.cacheManager.get(requestKey);
 
     if (!requestData || requestData.lastReset !== hourStart) return 0;

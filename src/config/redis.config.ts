@@ -4,7 +4,7 @@ import * as Joi from 'joi';
 export default registerAs('redis', () => ({
   connection: {
     host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT, 10) || 6379,
+    port: parseInt(process.env.REDIS_PORT ?? '6379', 10),
   },
 }));
 
